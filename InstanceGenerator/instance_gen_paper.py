@@ -4,6 +4,7 @@ import math
 from typing import Dict, List, Tuple
 
 def create_instance(
+    p_type: str,
     number_pages: int,
     number_layouts: int,
     number_article: int,
@@ -29,6 +30,7 @@ def create_instance(
 
     if seed is not None:
         random.seed(seed)
+        rng_min  = random.Random(seed + 99999)
 
     # --- Validierungen ---
     if number_pages <= 0 or number_layouts <= 0 or number_article <= 0:
@@ -51,7 +53,7 @@ def create_instance(
             raise ValueError("Wenn use_explicit_hulls=True, muss number_hulls > 0 sein.")
         n_s = number_hulls
     else:
-        n_s = int(0.3 * number_article)  # Article-to-shell ratio
+        n_s = int(0.8 * number_article)  # Article-to-shell ratio
 
     hulls = list(range(1, n_s + 1))
 
@@ -71,7 +73,11 @@ def create_instance(
     hull_params: Dict[int, Dict[str, int]] = {}
     for s in hulls:
         maximum = random.randint(500, 12000)
-        minimum = random.randint(int(maximum * 0.9), int(maximum * 0.95))
+
+        if p_type == "B":
+            minimum = rng_min.randint(int(maximum * 0.75), int(maximum * 0.85))
+        else:
+            minimum = rng_min.randint(int(maximum * 0.90), int(maximum * 0.95))
         hull_params[s] = {"min": minimum, "max": maximum}
 
     # --- Step 3: Shell-Zuweisungen zu (Layout, Box) ---
@@ -173,27 +179,46 @@ if __name__ == "__main__":
     max_hulls_list = [10,20,30]
 
 
-    for i in range(1, 2):
-        for pages in pages_list:
-            for article in [j*pages for j in numer_article ]:
-                for layout_param in [l*pages for l in number_layouts]:
-                    for max_layouts_param in max_layouts_list:
-                        for max_hulls_param in max_hulls_list:
-                            print(layout_param)
-                            print(max_layouts_param)
-                            number_pages = pages
-                            number_article = article
-                            instance = create_instance(
-                                number_pages=number_pages,
-                                number_layouts=layout_param,
-                                number_article=number_article,
-                                min_boxes=2,
-                                max_boxes=5,
-                                min_layouts=1,
-                                max_layouts=max_layouts_param,
-                                max_hulls=max_hulls_param,
-                                use_explicit_hulls=False,
-                                seed=42 + i
-                            )
-                            name = f"Instance_{number_pages}_{number_article}_{layout_param}_{max_layouts_param}_{max_hulls_param}_{i}.json"
-                            save_instance_to_json(instance, name)
+    # for i in range(1, 2):
+    #     for pages in pages_list:
+    #         for article in [j*pages for j in numer_article ]:
+    #             for layout_param in [l*pages for l in number_layouts]:
+    #                 for max_layouts_param in max_layouts_list:
+    #                     for max_hulls_param in max_hulls_list:
+    #                         print(layout_param)
+    #                         print(max_layouts_param)
+    #                         number_pages = pages
+    #                         number_article = article
+    #                         instance = create_instance(
+    #                             number_pages=number_pages,
+    #                             number_layouts=layout_param,
+    #                             number_article=number_article,
+    #                             min_boxes=2,
+    #                             max_boxes=5,
+    #                             min_layouts=1,
+    #                             max_layouts=max_layouts_param,
+    #                             max_hulls=max_hulls_param,
+    #                             use_explicit_hulls=False,
+    #                             seed=42 + i
+    #                         )
+
+    prefix = "L"
+    number_pages = 30
+    number_article = 120
+    problem_type = "B"
+    for i in range(1,11):
+        instance = create_instance(
+            p_type = problem_type,
+            number_pages=number_pages,
+            number_layouts=100,
+            number_article=number_article,
+            min_boxes=2,
+            max_boxes=5,
+            min_layouts=7,
+            max_layouts=15,
+            max_hulls=int(0.8 * number_article),
+            use_explicit_hulls=False,
+            seed=42 + i
+        )
+        name = f"{prefix}{number_pages}P{number_article}A{i}({problem_type}).json"
+        save_instance_to_json(instance, name)

@@ -1,7 +1,7 @@
 from MILPmI import create_model
 import os
 from gurobipy import  GRB
-from parser import parse_json_from_file
+from Models.parser import parse_json_from_file
 import numpy as np
 
 # Annahme: Diese Funktionen/Module existieren und werden importiert

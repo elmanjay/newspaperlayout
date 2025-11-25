@@ -1,6 +1,7 @@
 
 import json
 import numpy as np
+import os
 
 def parse_json_from_file(file_name):
     with open(file_name, "r") as f:
@@ -29,7 +30,8 @@ def parse_json_from_file(file_name):
 
 
 if __name__ == "__main__":
-    name = "TBLOP mit Hüllen/Instances/Diss/Medium/Instance_20_120_1.json"
+    base_dir = os.path.dirname(__file__)
+    name = os.path.join(base_dir, "Instances", "Diss", "Medium", "Instance_10_60_1.json")
     #name = "TBLOP mit Hüllen/Instances/average_sol/Instance_5_300.json"
     #save_instance_to_json(instance,name)
     pages, article, layouts, resorts, article_resorts, resort_page, layouts_pages, box_layouts, hull_layout_box, hull_article, article_length, hull_params, article_priority= parse_json_from_file(name)

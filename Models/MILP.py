@@ -1,6 +1,6 @@
 from gurobipy import Model, GRB, quicksum
 import csv
-from parser import parse_json_from_file
+from Models.parser import parse_json_from_file
 import numpy as np
 import os
 

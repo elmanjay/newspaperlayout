@@ -15,6 +15,7 @@ strafen = np.array([10**12, 10**10, 10**8, 10**6, 10**4, 0])
 prioritäten = np.array([10,5,1,0])
 kategorien = ["A","B","C","D"]
 normierte_strafen = min_max_normalize(strafen)
+print(normierte_strafen)
 normierte_prio = min_max_normalize(prioritäten)
 prio_dict = dict(zip(kategorien, normierte_prio))
 
@@ -31,6 +32,11 @@ def create_model(pages, article, layouts, resorts, article_resorts, resort_page,
     T_under = 0.15
     M_prio = 1
 
+
+    N_plus = [(14, 52), (7, 33), (41, 4), (26, 11), (58, 19),
+ (45, 32), (10, 49), (6, 23), (28, 39), (30, 54),
+ (16, 47), (22, 2), (55, 35), (59, 1), (31, 42),
+ (21, 57), (18, 34), (51, 40), (25, 8)]
     #Bestimmung von M aus maximum aus Artikel und Boxlängen
     max_hull_value = max(hull["max"] for hull in hull_params.values())
     max_article_length = max(article_length.values())
@@ -39,6 +45,9 @@ def create_model(pages, article, layouts, resorts, article_resorts, resort_page,
     min_boxes = min(len(v) for v in box_layouts.values())
     max_boxes = max(len(v) for v in box_layouts.values())
     print(min_boxes)
+    
+
+
             
 
     hull_layout_box_article = {}
@@ -83,6 +92,12 @@ def create_model(pages, article, layouts, resorts, article_resorts, resort_page,
             for k in box_layouts[l]:
                 for h in hull_layout_box[l][k]:
                     z[j,l,k,h] = model.addVar(vtype=GRB.BINARY, name=f"z_{j}_{l}_{k}_{h}")
+
+    
+    # o = {}
+    # for i in [x for pair in N_plus for x in pair]:
+    #     for j in pages:
+    #         o[i,j] = model.addVar(vtype=GRB.BINARY, name=f"o_{i}_{j}")
 
     min_hull = {}
     max_hull = {}
@@ -364,6 +379,19 @@ def create_model(pages, article, layouts, resorts, article_resorts, resort_page,
         name=f"NB19_{j}_{l}_{k}"
     )
 
+    # model.addConstrs(
+    # (o[i,j] == quicksum(x[i,j,l,k,s] for l in layouts_pages[j] for k in box_layouts[l] for s in hull_layout_box_article[l][k][i])for i in [x for pair in N_plus for x in pair] for j in pages),
+    # name = "binding"
+    # )
+
+    # model.addConstrs(
+    # (o[i,j] == o[i2,j] for i, i2 in N_plus for j in pages),
+    # name = "binding"
+    # )
+
+
+
+
     # print(hulls)
     # for j in pages:
     #     for l in layouts_pages[j]:                         # alle Layouts, die auf Seite j möglich sind
@@ -389,17 +417,21 @@ def create_model(pages, article, layouts, resorts, article_resorts, resort_page,
 
 if __name__ == "__main__":
 
+    # print(normierte_prio)
+    # instance = create_instance(number_article=150,number_pages=30,number_layouts=15,min_boxes=2,max_boxes=5,max_hulls=10)
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    instance_name = "Instance_30_120_1(A)"
-    instance_dir = os.path.join(base_dir, "Instances", "Diss","Large","L30P120(A)")
+    instance_name = "Instance_30_200_2"
+    instance_dir = os.path.join(base_dir, "Instances", "Diss","Large")
     name = os.path.join(instance_dir,f"{instance_name}.json")
     alpha_value = 0.5
     lambda_value = 0.01
     pages, article, layouts, resorts, article_resorts, resort_page, layouts_pages, box_layouts, hull_layout_box, hull_article, article_length, hull_params, article_priority = parse_json_from_file(name)
+    #print(hull_layout_box[50][1])
     model = create_model(pages, article, layouts, resorts, article_resorts, resort_page, layouts_pages, box_layouts, hull_layout_box, hull_article, article_length, hull_params, article_priority, alpha_value, lambda_value)
     model.setParam('TimeLimit', 3600)
     model.Params.LogFile = os.path.join(instance_dir,"sol", f"{instance_name}.log")
     model.Params.Threads = 1  
+    #model.write(f"{instance_name}.lp")
     model.write(os.path.join(instance_dir,"lp","mps",f"{instance_name}.mps"))
     model.optimize()
 
@@ -432,7 +464,7 @@ if __name__ == "__main__":
                 underfill_rate = 100* (article_length[i] - hull_params[solution_dict[i]]["max"]) / hull_params[solution_dict[i]]["max"] 
                 print(f"Artikel {i} überfüllt Hülle {solution_dict[i]} um {underfill_rate}%")
 
-        # Counter für z- und v-Variablen
+            # Counter für z- und v-Variablen
         z_count = 0
         v_count = 0
 
@@ -450,6 +482,3 @@ if __name__ == "__main__":
         print(f"Anzahl z-Variablen != 0: {z_count}")
         print(f"Anzahl v-Variablen != 0: {v_count}")
         print("================================")
-
-
-        
